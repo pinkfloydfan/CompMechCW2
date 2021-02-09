@@ -80,4 +80,3 @@ function F = generateGlobalF(n, q)
         F(i:i+3,1) = F(i:i+3,1) + [q*L_local/2 0 q*L_local/2 0]';
     end
 end
-
