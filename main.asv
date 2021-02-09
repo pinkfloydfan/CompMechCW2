@@ -1,0 +1,56 @@
+clear
+clc
+
+%number of elements
+n = 40; 
+
+%distributed load
+q = 5e3;
+
+K = generateGlobalK(n);
+F = generateGlobalF(n, q);
+
+%apply BCs - get rid of the 3 DoFs at each cantilevered end
+len = length(F);
+
+K_reduced = K(3:len-3,3:len-3);
+F_reduced = F(3:len-3, 1);
+
+%calculate displacement vector
+rho = K_reduced\F_reduced;
+
+displacements = [0 rho(2:2:end)' 0]; % displacements are the even index terms
+rotations = [0 rho(1:2:end)' 0]; % rotations are the odd index terms
+x = linspace(0, 1, n);
+
+
+
+plot(x, displacements)
+
+%assemble global stiffness matrix
+function K = generateGlobalK(n)
+    K = zeros(2*n + 2);
+    EI = 10^2;
+    
+    %unit length
+    L_local = 1/n; 
+    
+    K_local = Kmat(EI, L_local);
+    
+    for i = 1:2:(n*2)
+        K(i:i+3,i:i+3) = K(i:i+3,i:i+3) + K_local;
+    end
+end
+
+%assemble global load vector
+function F = generateGlobalF(n, q)
+    F = zeros(2*n + 2, 1);
+    
+    %unit length
+    L_local = 1/n; 
+    
+    for i = 1:2:(n*2)
+        F(i:i+3,1) = F(i:i+3,1) + [-q*L_local/2 0 -q*L_local/2 0]';
+    end
+end
+
