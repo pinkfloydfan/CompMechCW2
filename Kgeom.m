@@ -20,7 +20,7 @@ Wprime= @(x)shapeder(x,L,1)*rhoe(1) ...
 for i=1:4
   for j=1:4
     KFun  = @(x)(3*EA/2)*(Wprime(x).^2).*shapeder(x,L,i).*shapeder(x,L,j);
-    StiffMat(i,j)=quadl(KFun,0,L);
+    StiffMat(i,j)=integral(KFun,0,L);
   end
 end
 % eof

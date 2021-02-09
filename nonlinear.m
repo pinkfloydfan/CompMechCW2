@@ -7,7 +7,7 @@ EA = 1e5;
 q = 1e3;
 L = 1;
 
-n = 10;
+n = 100;
 
 
 K = generateGlobalK(n, EI);
@@ -18,21 +18,28 @@ rho = zeros(length(F), 1);
 
 L_local = 1/n; 
 
-eps = 100
-
+eps = 100;
 
 while eps > 0.01 
     
-    F_g = evalGlobalF_g(rho, EA, L_local);
+    F_g = evalGlobalF_g(rho, EA, L_local)';
+    K_g = evalGlobalK_g(rho, EA, L_local)';
     
     G       = K*rho - F - F_g;
-    G_deriv = K + evalGlobalK_g(rho, EA, L_local);
+    G_deriv = K + K_g;
     
-    new_rho = rho - G\G_deriv;
+    %enforcing rho_1, rho_2, rho_n-1, rho_n = 0
+    rho_reduced = rho(3:end-2);
+    G_reduced = G(3:end-2);
+    
+    G_deriv_reduced = G_deriv(3:end-2,3:end-2);
+    
+    new_rho = [0; 0; rho_reduced - G_deriv_reduced\G_reduced ;0 ; 0];
+    
 
     % enforce boundary conditions at each cantilevered end
-    new_rho(1:2,1) = [0;0];
-    new_rho(end-1:end,1) = [0;0];
+    %new_rho(1:2,1) = [0;0];
+    %new_rho(end-1:end,1) = [0;0];
 
    eps = max(abs(new_rho-rho));
    

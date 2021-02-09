@@ -19,7 +19,7 @@ Wprime= @(x)shapeder(x,L,1)*rhoe(1) ...
 % Evaluate the elements of the geometric stiffness matrix.
 for i=1:4
     Fun= @(x)(-EA/2)*(Wprime(x).^3).*shapeder(x,L,i);
-    Fnl(i)=quadl(Fun,0,L);
+    Fnl(i)=integral(Fun,0,L);
   end
 end
 
