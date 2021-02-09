@@ -7,16 +7,16 @@ EA = 1e5;
 q = 1e3;
 L = 1;
 
-N  = [3 20 50 100 250 500 1000];
-errors = zeros(1, length(N));
+n = 100;
 
-% loop through array n to compute errors for varying numbers of elements
-for i = 1:length(N)
-    
-    n = N(i);
-    
-    K = generateGlobalK(n, EI);
-    F = generateGlobalF(n, q);
+
+K = generateGlobalK(n, EI);
+F = generateGlobalF(n, q);
+x = linspace(0, 1, n);
+exact_displacements = q/(24*EI)*x.^2.*(L^2 - 2*L.*x + x.^2);
+rho = zeros(
+
+while eps > 0.01 
 
     % enforce boundary conditions at each cantilevered end
     len = length(F);
@@ -33,13 +33,9 @@ for i = 1:length(N)
     rotations = [0 rho(2:2:end)' 0]; 
 
     % generate domain
-    x = linspace(0, 1, n);
-    exact_displacements = q/(24*EI)*x.^2.*(L^2 - 2*L.*x + x.^2);
-    
-    max_error = max(abs(fe_displacements-exact_displacements));
-    
-    errors(i) = max_error;
 
+max_error = max(abs(fe_displacements-exact_displacements));
+    
 end
 
 figure 
@@ -53,16 +49,6 @@ grid on
 %plot(x, exact_displacements, 'DisplayName', 'Exact solution')
 %grid on 
 %legend
-
-function F_g = evalGlobalF_g(rho)
-    L = length(rho);
-    F_g = zeros(1,L);
-    for i = 1:2:L-3
-        rho_e = L(i:i+3)
-        F_g_e = Fgeom(rho_e
-    end
-end
-
 
 
 % assemble global stiffness matrix
@@ -91,3 +77,22 @@ function F = generateGlobalF(n, q)
     end
 end
 
+function F_g = evalGlobalF_g(rho)
+    L = length(rho);
+    F_g = zeros(1,L);
+    for i = 1:2:L-3
+        rho_e = L(i:i+3);
+        F_g_e = Fgeom(rho_e);
+        F_g(i:i+3) = F_g(i:i+3) + F_g_e;
+    end
+end
+
+function K_g = evalGlobalK_g(rho)
+    L = length(rho);
+    K_g = zeros(L);
+    for i = 1:2:L-3
+        rho_e = L(i:i+3);
+        K_g_e = Kgeom(rho_e);
+        K_g(i:i+3,i:i+3) = K_g(i:i+3,i:i+3) + K_g_e;
+    end
+end

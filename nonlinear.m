@@ -7,45 +7,52 @@ EA = 1e5;
 q = 1e3;
 L = 1;
 
-n = 100;
+n = 10;
 
 
 K = generateGlobalK(n, EI);
 F = generateGlobalF(n, q);
-
-% enforce boundary conditions at each cantilevered end
-len = length(F);
-
-K_reduced = K(3:len-3,3:len-3);
-F_reduced = F(3:len-3, 1);
-
-% calculate displacement vector through simple Ax = b
-rho = K_reduced\F_reduced;
-
-% displacements are the odd index terms and rotations are the even index terms
-% rho_1 = rho_n = 0 as a part of the boundary conditions
-fe_displacements = [0 rho(1:2:end-1)' 0]; 
-rotations = [0 rho(2:2:end)' 0]; 
-
-% generate domain
 x = linspace(0, 1, n);
 exact_displacements = q/(24*EI)*x.^2.*(L^2 - 2*L.*x + x.^2);
+rho = zeros(length(F), 1);
 
-max_error = max(abs(fe_displacements-exact_displacements));
+L_local = 1/n; 
+
+eps = 100
+
+
+while eps > 0.01 
     
+    F_g = evalGlobalF_g(rho, EA, L_local);
+    
+    G       = K*rho - F - F_g;
+    G_deriv = K + evalGlobalK_g(rho, EA, L_local);
+    
+    new_rho = rho - G\G_deriv;
+
+    % enforce boundary conditions at each cantilevered end
+    new_rho(1:2,1) = [0;0];
+    new_rho(end-1:end,1) = [0;0];
+
+   eps = max(abs(new_rho-rho));
+   
+   rho = new_rho;
+    
+end
+
+fe_displacements = rho(1:2:end-2);
+rotations = rho(2:2:end); 
+%figure 
+%loglog(N, errors, '-o')
+%grid on
 
 
-figure 
-loglog(N, errors, '-o')
-grid on
-
-
-%figure
-%hold on
-%plot(x, fe_displacements, 'DisplayName', 'FE approximation')
-%plot(x, exact_displacements, 'DisplayName', 'Exact solution')
-%grid on 
-%legend
+figure
+hold on
+plot(x, fe_displacements, 'DisplayName', 'Nonlinear FE approximation')
+plot(x, exact_displacements, 'DisplayName', 'Exact solution')
+grid on 
+legend
 
 
 % assemble global stiffness matrix
@@ -74,22 +81,22 @@ function F = generateGlobalF(n, q)
     end
 end
 
-function F_g = evalGlobalF_g(rho)
+function F_g = evalGlobalF_g(rho, EA, L_local)
     L = length(rho);
     F_g = zeros(1,L);
     for i = 1:2:L-3
-        rho_e = L(i:i+3);
-        F_g_e = Fgeom(rho_e);
+        rho_e = rho(i:i+3);
+        F_g_e = Fgeom(rho_e, EA, L_local);
         F_g(i:i+3) = F_g(i:i+3) + F_g_e;
     end
 end
 
-function K_g = evalGlobalK_g(rho)
+function K_g = evalGlobalK_g(rho, EA, L_local)
     L = length(rho);
     K_g = zeros(L);
     for i = 1:2:L-3
-        rho_e = L(i:i+3);
-        K_g_e = Kgeom(rho_e);
+        rho_e = rho(i:i+3);
+        K_g_e = Kgeom(rho_e, EA, L_local);
         K_g(i:i+3,i:i+3) = K_g(i:i+3,i:i+3) + K_g_e;
     end
 end
