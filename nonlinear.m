@@ -20,7 +20,7 @@ L_local = 1/n;
 
 eps = 100;
 
-while eps > 0.01 
+while eps > 0.00001 
     
     F_g = evalGlobalF_g(rho, EA, L_local)';
     K_g = evalGlobalK_g(rho, EA, L_local)';
@@ -40,8 +40,11 @@ while eps > 0.01
     % enforce boundary conditions at each cantilevered end
     %new_rho(1:2,1) = [0;0];
     %new_rho(end-1:end,1) = [0;0];
+    
+    new_F_g = evalGlobalF_g(new_rho, EA, L_local)';
+    new_G   = K*new_rho - F - new_F_g;
 
-   eps = max(abs(new_rho-rho));
+   eps = max(abs(new_F_g-F_g));
    
    rho = new_rho;
     
