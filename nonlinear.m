@@ -57,10 +57,11 @@ fe_rotations = rho(2:2:end-1);
 %figure 
 %loglog(N, errors, '-o')
 %grid on
-
+[fe_displacements_linear, fe_rotations_linear] = evalLinearDisplacements(n, EI, q);
 
 figure
 hold on
+plot(x, fe_displacements_linear, 'DisplayName', 'Linear FE approximation')
 plot(x, fe_displacements, 'DisplayName', 'Nonlinear FE approximation')
 plot(x, exact_displacements, 'DisplayName', 'Exact solution')
 title('Displacements')
@@ -69,13 +70,32 @@ legend
 
 figure
 hold on
+plot(x, fe_rotations_linear, 'DisplayName', 'Linear FE approximation')
 plot(x, fe_rotations, 'DisplayName', 'Nonlinear FE approximation')
 plot(x, exact_rotations, 'DisplayName', 'Exact solution')
 title('Rotations')
 grid on 
 legend
 
+function [fe_displacements_linear, fe_rotations_linear] = evalLinearDisplacements(n, EI, q)
 
+    K = generateGlobalK(n, EI);
+    F = generateGlobalF(n, q);
+
+    % enforce boundary conditions at each cantilevered end
+    len = length(F);
+
+    K_reduced = K(3:len-3,3:len-3);
+    F_reduced = F(3:len-3, 1);
+
+    % calculate displacement vector through simple Ax = b
+    rho = K_reduced\F_reduced;
+
+    % displacements are the odd index terms and rotations are the even index terms
+    % rho_1 = rho_n = 0 as a part of the boundary conditions
+    fe_displacements_linear = [0 rho(1:2:end-1)' 0]; 
+    fe_rotations_linear     = [0 rho(2:2:end)' 0]; 
+end
 
 % assemble global stiffness matrix
 function K = generateGlobalK(n, EI)
