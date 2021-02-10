@@ -14,6 +14,8 @@ K = generateGlobalK(n, EI);
 F = generateGlobalF(n, q);
 x = linspace(0, 1, n);
 exact_displacements = q/(24*EI)*x.^2.*(L^2 - 2*L.*x + x.^2);
+exact_rotations     = q/(24*EI)*(2*L^2*x - 6*L*x.^2 + 4*x.^3);
+
 rho = zeros(length(F), 1);
 
 L_local = 1/n; 
@@ -51,7 +53,7 @@ while eps > 0.00001
 end
 
 fe_displacements = rho(1:2:end-2);
-rotations = rho(2:2:end); 
+fe_rotations = rho(2:2:end-1); 
 %figure 
 %loglog(N, errors, '-o')
 %grid on
@@ -61,8 +63,18 @@ figure
 hold on
 plot(x, fe_displacements, 'DisplayName', 'Nonlinear FE approximation')
 plot(x, exact_displacements, 'DisplayName', 'Exact solution')
+title('Displacements')
 grid on 
 legend
+
+figure
+hold on
+plot(x, fe_rotations, 'DisplayName', 'Nonlinear FE approximation')
+plot(x, exact_rotations, 'DisplayName', 'Exact solution')
+title('Rotations')
+grid on 
+legend
+
 
 
 % assemble global stiffness matrix
